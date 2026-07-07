@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EntrevistaMotivacional·AI — Entrenamiento OARS con paciente ambivalente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#F4F2EA; --panel:#FFFFFF; --ink:#14312F; --muted:#5E6B68;
+  --line:#E2DED0; --petrol:#0F4C47; --petrol-deep:#0A3532; --petrol-soft:#E4EEEC;
+  --amber:#C99000; --amber-soft:#FFF3D6; --green:#12796A; --green-soft:#DFF1ED;
+  --red:#D9573F; --red-deep:#B23B26; --red-soft:#FBE7E2;
+  --radius:14px; --shadow:0 1px 2px rgba(20,49,47,.05),0 8px 24px rgba(20,49,47,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 'Noto Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;letter-spacing:-.01em}
+code,.mono{font-family:'Noto Sans Mono',monospace}
+header{position:sticky;top:0;z-index:50;background:rgba(244,242,234,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px}
+.logo{font-family:'Space Grotesk';font-weight:700;font-size:19px;color:var(--petrol-deep)}
+.logo b{color:var(--amber)}
+.tag{font-family:'Noto Sans Mono';font-size:11.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:2px 10px}
+.turnpill{margin-left:auto;display:none;font-family:'Noto Sans Mono';font-size:12px;background:var(--petrol);color:#fff;border-radius:99px;padding:5px 14px}
+main{max-width:1180px;margin:22px auto;padding:0 20px;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+@media(max-width:940px){main{grid-template-columns:1fr}.col-side{order:2}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
+.panel-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.panel-h h3{margin:0;font-size:16px}
+.eyebrow{font-family:'Noto Sans Mono';font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--petrol);background:var(--petrol-soft);border-radius:6px;padding:3px 8px}
+.panel-b{padding:18px}
+.field{margin-bottom:14px}
+.lab{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.inp{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;color:var(--ink);background:#FCFBF7;outline:none}
+.inp:focus{border-color:var(--petrol);box-shadow:0 0 0 3px rgba(15,76,71,.12)}
+textarea.inp{min-height:64px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:640px){.row2,.row3{grid-template-columns:1fr}}
+.hint{font-size:12px;color:var(--muted);margin-top:5px}
+.btn{border:none;border-radius:10px;padding:10px 16px;font:600 14px 'Noto Sans';cursor:pointer;transition:filter .15s,transform .05s}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--petrol);color:#fff}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-amber{background:var(--amber);color:#fff}
+.btn-ghost{background:var(--petrol-soft);color:var(--petrol)}
+.btn-line{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn-block{width:100%}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.banner{display:none;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:14px}
+.banner.err{display:block;background:var(--red-soft);color:var(--red-deep)}
+.adv{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.adv summary{cursor:pointer;font-size:13px;color:var(--muted);font-weight:600}
+.notice{background:var(--amber-soft);border:1px solid #EFD9A0;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#6E5200;margin-bottom:14px}
+.prog{font-family:'Noto Sans Mono';font-size:12.5px;color:var(--petrol);background:var(--petrol-soft);border-radius:8px;padding:8px 12px}
+.foot{max-width:1180px;margin:10px auto 40px;padding:0 20px;font-size:12px;color:var(--muted)}
+.hidden{display:none!important}
+/* perfil */
+.perfil{background:#FAF8F1;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13.5px;margin-bottom:14px}
+/* regla de disposición */
+.reglabox{margin-bottom:14px}
+.reglahead{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px}
+.regla{height:12px;border-radius:99px;background:#EEECE2;overflow:hidden}
+.regla .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--red),var(--amber),var(--green));transition:width .6s}
+/* contadores OARS */
+.oars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+@media(max-width:640px){.oars{grid-template-columns:repeat(2,1fr)}}
+.oc{border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
+.oc .on{font-family:'Space Grotesk';font-weight:700;font-size:20px;color:var(--petrol-deep)}
+.oc .ol{font-size:10.5px;color:var(--muted)}
+.oc.bad .on{color:var(--red-deep)}
+/* chat */
+.chat{display:flex;flex-direction:column;gap:12px;max-height:440px;overflow-y:auto;padding:4px 2px;scroll-behavior:smooth}
+.msg{max-width:84%;border-radius:14px;padding:10px 14px;font-size:14.5px}
+.msg.al{align-self:flex-end;background:var(--petrol);color:#fff;border-bottom-right-radius:4px}
+.msg.pa{align-self:flex-start;background:#F3F1E8;border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg .who{font-family:'Noto Sans Mono';font-size:10px;text-transform:uppercase;letter-spacing:.1em;opacity:.7;margin-bottom:3px}
+.msg .cod{display:inline-block;font-family:'Noto Sans Mono';font-size:9.5px;background:rgba(255,255,255,.18);border-radius:6px;padding:1px 7px;margin-top:6px;margin-right:4px}
+.msg.sys{align-self:center;background:var(--amber-soft);color:#6E5200;font-size:12.5px;border-radius:10px;max-width:95%}
+.composer{display:flex;gap:8px;margin-top:14px;align-items:flex-end}
+.composer textarea{flex:1;min-height:46px;max-height:130px}
+.chartbox{position:relative;height:200px;margin-bottom:14px}
+/* evaluación */
+.score{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.score .n{font-family:'Space Grotesk';font-weight:700;font-size:46px;color:var(--petrol-deep)}
+.score .d{font-size:13px;color:var(--muted)}
+.indices{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:640px){.indices{grid-template-columns:1fr 1fr}}
+.ib{border-radius:12px;padding:10px;text-align:center;font-size:11.5px}
+.ib .iv{font-family:'Space Grotesk';font-weight:700;font-size:20px;display:block}
+.ib.ok{background:var(--green-soft);color:var(--green)}
+.ib.md{background:var(--amber-soft);color:#6E5200}
+.ib.bad{background:var(--red-soft);color:var(--red-deep)}
+.fb{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13.5px}
+.fb h4{margin:0 0 6px;font-size:13px;display:flex;justify-content:space-between;gap:10px}
+.fb .pt{font-family:'Noto Sans Mono';color:var(--petrol)}
+.side-list{list-style:none;margin:0;padding:0}
+.side-list li{padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.side-list li:last-child{border-bottom:none}
+.side-list .dt{font-family:'Noto Sans Mono';font-size:10.5px;color:var(--muted);display:block}
+.linklike{background:none;border:none;color:var(--petrol);font:600 13.5px 'Noto Sans';cursor:pointer;padding:0;text-align:left}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand">
+      <span class="logo">EntrevistaMotivacional·<b>AI</b></span>
+      <span class="tag">OARS · paciente ambivalente</span>
+    </div>
+    <span class="turnpill" id="turnPill"></span>
+  </div>
+</header>
+
+<main>
+  <div class="col-main">
+
+    <!-- ═══ Nuevo caso ═══ -->
+    <section class="panel" id="newPanel">
+      <div class="panel-h"><span class="eyebrow">Nuevo</span><h3>Crea una entrevista motivacional</h3></div>
+      <div class="panel-b">
+        <div class="notice">Herramienta <b>formativa y de simulación</b>. El paciente es ficticio y generado por IA. Entrena el espíritu y las técnicas de la entrevista motivacional (Miller y Rollnick); no sustituye la supervisión clínica.</div>
+        <div id="banner" class="banner"></div>
+        <div class="row3">
+          <div class="field">
+            <label class="lab">Titulación</label>
+            <select class="inp" id="titu">
+              <option>Medicina</option><option>Enfermería</option><option>Fisioterapia</option>
+              <option>Terapia Ocupacional</option><option>Podología</option><option>Farmacia</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="lab">Conducta objetivo</label>
+            <input class="inp" id="conducta" list="condList" placeholder="Ej.: dejar de fumar">
+            <datalist id="condList">
+              <option value="Dejar de fumar"></option>
+              <option value="Reducir el consumo de alcohol"></option>
+              <option value="Adherencia al tratamiento"></option>
+              <option value="Actividad física / sedentarismo"></option>
+              <option value="Alimentación y control de peso"></option>
+              <option value="Autocuidado del pie diabético"></option>
+              <option value="Realizar los ejercicios de fisioterapia en casa"></option>
+              <option value="Higiene de sueño y pantallas"></option>
+            </datalist>
+            <div class="hint">Escribe libremente, elige una sugerencia o déjalo en blanco (sorpresa).</div>
+          </div>
+          <div class="field">
+            <label class="lab">Etapa del cambio</label>
+            <select class="inp" id="etapa">
+              <option value="precontemplacion">Precontemplación (no lo ve como problema)</option>
+              <option value="contemplacion" selected>Contemplación (ambivalente)</option>
+              <option value="preparacion">Preparación (dispuesto, sin plan)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label class="lab">Modo</label>
+            <select class="inp" id="modo">
+              <option value="entrenamiento" selected>Entrenamiento (regla y códigos visibles en vivo)</option>
+              <option value="evaluacion">Evaluación (indicadores ocultos hasta el final)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="lab">Indicaciones opcionales</label>
+            <input class="inp" id="extra" placeholder="Ej.: varón de 55 años tras un ingreso; adolescente que viene obligado…">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" id="createBtn">Crear paciente</button>
+        <div id="createProg" class="prog" style="margin-top:12px;display:none"></div>
+
+        <details class="adv">
+          <summary>Ajustes avanzados (API)</summary>
+          <div class="row2" style="margin-top:12px">
+            <div class="field">
+              <label class="lab">OpenAI API Key</label>
+              <input class="inp" id="apiKey" type="password" placeholder="sk-…" autocomplete="off">
+              <div class="hint">Se guarda solo en tu navegador. Compartida entre las apps del portfolio.</div>
+            </div>
+            <div class="field">
+              <label class="lab">Modelo</label>
+              <select class="inp" id="model">
+                <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+                <option value="gpt-4o">gpt-4o</option>
+                <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+              </select>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ═══ Entrevista ═══ -->
+    <section class="panel hidden" id="chatPanel">
+      <div class="panel-h">
+        <span class="eyebrow">Entrevista</span><h3 id="pName">—</h3>
+        <button class="btn btn-amber" id="endBtn" style="margin-left:auto;padding:6px 12px">Terminar entrevista</button>
+      </div>
+      <div class="panel-b">
+        <div class="perfil" id="perfil"></div>
+        <div class="reglabox" id="reglaBox">
+          <div class="reglahead"><b>Disposición al cambio</b><span class="mono" id="reglaTxt"></span></div>
+          <div class="regla"><div class="fill" id="reglaFill" style="width:0%"></div></div>
+          <div class="hint">Se mueve de forma determinista según tus conductas (OARS suma; el reflejo de corrección resta).</div>
+        </div>
+        <div class="oars" id="oarsBox"></div>
+        <div class="chat" id="chat"></div>
+        <div class="composer">
+          <textarea class="inp" id="userIn" placeholder="Habla con tu paciente… (Enter para enviar)"></textarea>
+          <button class="btn btn-primary" id="sendBtn" style="height:46px">Enviar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Cierre / plan ═══ -->
+    <section class="panel hidden" id="planPanel">
+      <div class="panel-h"><span class="eyebrow">Cierre</span><h3>Resumen y plan</h3></div>
+      <div class="panel-b">
+        <p style="font-size:13.5px;margin:0 0 10px">Cierra como cerrarías la consulta: haz un <b>resumen final</b> de la ambivalencia y el discurso de cambio del paciente, y recoge el <b>plan acordado</b> (si lo hay). Si el paciente no estaba preparado, indica qué puerta dejas abierta.</p>
+        <textarea class="inp" id="planTxt" style="min-height:110px" placeholder="Resumen de lo hablado, motivos del paciente con sus propias palabras, y el siguiente paso pequeño y concreto que habéis acordado…"></textarea>
+        <div class="toolbar">
+          <button class="btn btn-primary" id="evalBtn">Enviar y evaluar</button>
+          <button class="btn btn-line" id="backBtn">Volver a la entrevista</button>
+        </div>
+        <div id="evalProg" class="prog" style="margin-top:12px;display:none"></div>
+      </div>
+    </section>
+
+    <!-- ═══ Evaluación ═══ -->
+    <section class="panel hidden" id="fbPanel">
+      <div class="panel-h"><span class="eyebrow">Evaluación</span><h3>Informe de la entrevista</h3></div>
+      <div class="panel-b">
+        <div class="score"><span class="n" id="fbNota">—</span><span class="d">/ 10<br><span id="fbResumen"></span></span></div>
+        <span class="lab">Índices de técnica (deterministas, estilo MITI)</span>
+        <div class="indices" id="indBox"></div>
+        <span class="lab">Curva de disposición al cambio</span>
+        <div class="chartbox"><canvas id="chart"></canvas></div>
+        <div id="fbCards"></div>
+        <div id="fbPlan" class="fb"></div>
+        <div class="toolbar">
+          <button class="btn btn-ghost" id="dlWord">⬇ Informe (Word)</button>
+          <button class="btn btn-line" id="dlPdf">⬇ Informe (PDF)</button>
+          <button class="btn btn-primary" id="againBtn">Nueva entrevista</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="col-side">
+    <div class="panel">
+      <div class="panel-h"><span class="eyebrow">Guía</span><h3>Cómo funciona</h3></div>
+      <div class="panel-b" style="font-size:13.5px;color:var(--muted)">
+        <p style="margin:0 0 10px">Cada intervención tuya se codifica con la taxonomía <b style="color:var(--ink)">OARS/MITI</b> (preguntas abiertas, reflexiones, afirmaciones, resúmenes… y también confrontación o consejo no pedido).</p>
+        <p style="margin:0 0 10px">La <b style="color:var(--ink)">disposición al cambio del paciente evoluciona de forma determinista</b> en tu navegador según esas conductas: las reflexiones la suben, el reflejo de corrección la hunde. El paciente responde según su nivel.</p>
+        <p style="margin:0">Al final: índices de técnica calculados en cliente (% abiertas, ratio reflexiones/preguntas, % complejas, conductas inconsistentes), curva de disposición y rúbrica del espíritu EM. Exporta en Word o PDF.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><span class="eyebrow">Historial</span><h3>Mis entrevistas</h3></div>
+      <div class="panel-b">
+        <ul class="side-list" id="sesList"><li style="color:var(--muted)">Aún no hay entrevistas.</li></ul>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="foot">EntrevistaMotivacional·AI — comunicación clínica del portfolio · <code>vanilla HTML/JS · OpenAI · Chart.js · docx.js · jsPDF · IndexedDB</code></div>
+
+<script>
+/* ═══════════════════════════════ KERNEL ═══════════════════════════════ */
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+const el=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
+const APP={id:'entrevistamotivacional',version:1};
+const K_KEY='ia_openai_key';
+const K_CFG='em_cfg_v1';
+
+const banner=(msg)=>{const b=$('#banner');b.className='banner err';b.textContent=msg;b.style.display='block';window.scrollTo({top:0,behavior:'smooth'});};
+const clearBanner=()=>{$('#banner').style.display='none';};
+
+function getKey(){return ($('#apiKey').value||'').trim()||localStorage.getItem(K_KEY)||'';}
+function saveCfg(){
+  const key=($('#apiKey').value||'').trim();
+  if(key)localStorage.setItem(K_KEY,key);
+  localStorage.setItem(K_CFG,JSON.stringify({model:$('#model').value}));
+}
+(function loadCfg(){
+  const k=localStorage.getItem(K_KEY);if(k)$('#apiKey').value=k;
+  try{const c=JSON.parse(localStorage.getItem(K_CFG)||'{}');if(c.model)$('#model').value=c.model;}catch(e){}
+})();
+
+async function openai(messages,{json=true,temp=0.7,model=null,max=2000}={}){
+  const key=getKey();
+  if(!key)throw new Error('Falta la API Key. Ábrela en «Ajustes avanzados» y pégala (empieza por sk-…).');
+  saveCfg();
+  const body={model:model||$('#model').value,temperature:temp,max_tokens:max,messages};
+  if(json)body.response_format={type:'json_object'};
+  const r=await fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify(body)
+  });
+  if(r.status===401)throw new Error('API Key no válida (401). Revísala en «Ajustes avanzados».');
+  if(!r.ok){const t=await r.text();throw new Error('Error de la API ('+r.status+'): '+t.slice(0,180));}
+  const d=await r.json();
+  const txt=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'';
+  if(!json)return txt;
+  try{return JSON.parse(txt.replace(/```json|```/g,'').trim());}
+  catch(e){throw new Error('La IA no devolvió JSON válido. Vuelve a intentarlo.');}
+}
+function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+function r1(x){return Math.round(x*10)/10;}
+
+/* ═══════════════════════════════ IndexedDB ═══════════════════════════════ */
+let db=null;
+(function initDB(){
+  const req=indexedDB.open('em_ai_db',1);
+  req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('entrevistas'))d.createObjectStore('entrevistas',{keyPath:'id'});};
+  req.onsuccess=e=>{db=e.target.result;renderList();};
+})();
+function dbPut(p){if(!db)return;db.transaction('entrevistas','readwrite').objectStore('entrevistas').put(p);}
+function dbDel(id){if(!db)return;db.transaction('entrevistas','readwrite').objectStore('entrevistas').delete(id);renderList();}
+function dbAll(cb){if(!db)return cb([]);const out=[];const c=db.transaction('entrevistas').objectStore('entrevistas').openCursor();
+  c.onsuccess=e=>{const cur=e.target.result;if(cur){out.push(cur.value);cur.continue();}else cb(out.sort((a,b)=>b.ts-a.ts));};}
+
+function renderList(){
+  dbAll(list=>{
+    const ul=$('#sesList');ul.innerHTML='';
+    if(!list.length){const li=el('li');li.style.color='var(--muted)';li.textContent='Aún no hay entrevistas.';ul.appendChild(li);return;}
+    list.forEach(p=>{
+      const li=el('li');
+      const btn=el('button','linklike');
+      btn.textContent=(p.caso.nombre||'Paciente')+' · '+(p.caso.conducta||'');
+      btn.onclick=()=>{if(p.eval){C=p;codigos=p.codigos||[];reglaSerie=p.reglaSerie||[];indices=p.indices;showReport(p.eval,true);}};
+      const dt=el('span','dt');
+      dt.textContent=(p.eval?('Nota '+p.eval.nota_global+'/10'):'sin evaluar')+' · '+new Date(p.ts).toLocaleDateString('es-ES');
+      const del=el('button','linklike');del.textContent='✕';del.title='Eliminar';del.style.color='var(--red-deep)';del.style.float='right';
+      del.onclick=ev=>{ev.stopPropagation();if(confirm('¿Eliminar esta entrevista?'))dbDel(p.id);};
+      li.appendChild(del);li.appendChild(btn);li.appendChild(dt);ul.appendChild(li);
+    });
+  });
+}
+
+/* ═══════════════════════════════ Estado ═══════════════════════════════ */
+let C=null;            // {id, ts, titulacion, caso, chat, codigos, reglaSerie, indices, plan, eval}
+let chat=[];           // [{who,t,codigos?}]
+let codigos=[];        // registro plano de conductas codificadas
+let regla=35;          // disposición al cambio 0-100
+let reglaSerie=[];     // evolución por turno
+let turno=0;
+let indices=null;
+let chart=null;
+let busy=false;
+
+/* ═══════════════════════════════ Taxonomía y motor determinista ═══════════════════════════════
+   Efectos de cada conducta sobre la disposición (regla 0-100). MITI/OARS simplificado. */
+const CODS={
+  pregunta_abierta:  {lab:'P. abierta',   d:+2},
+  pregunta_cerrada:  {lab:'P. cerrada',   d:-0.5},
+  reflexion_simple:  {lab:'Reflex. simple',d:+1},
+  reflexion_compleja:{lab:'Reflex. compleja',d:+3},
+  afirmacion:        {lab:'Afirmación',   d:+2},
+  resumen:           {lab:'Resumen',      d:+2},
+  pedir_permiso:     {lab:'Pedir permiso',d:+1},
+  informar_con_permiso:{lab:'Informar (con permiso)',d:+2},
+  consejo_no_pedido: {lab:'Consejo no pedido',d:-3,mi_inc:true},
+  confrontacion:     {lab:'Confrontación',d:-4,mi_inc:true},
+  persuasion:        {lab:'Persuasión',   d:-2,mi_inc:true},
+  otro:              {lab:'Otro',         d:0}
+};
+function aplicaCodigos(lista){
+  lista.forEach(c=>{const def=CODS[c];if(def)regla=clamp(regla+def.d,0,100);});
+}
+function bandaRegla(v){return v>=65?'alta — discurso de cambio':(v>=40?'media — ambivalencia':'baja — resistencia');}
+
+/* ═══ Índices MITI deterministas (client-side) ═══
+   Umbrales MITI: % abiertas ≥50 competencia / ≥70 pericia; R:P ≥1 / ≥2; % complejas ≥40 / ≥50; MI-inconsistentes = 0 */
+function calculaIndices(cods){
+  const n=k=>cods.filter(c=>c===k).length;
+  const ab=n('pregunta_abierta'),ce=n('pregunta_cerrada');
+  const rs=n('reflexion_simple'),rc=n('reflexion_compleja');
+  const preguntas=ab+ce,reflex=rs+rc;
+  const inc=cods.filter(c=>CODS[c]&&CODS[c].mi_inc).length;
+  const pctAb=preguntas?100*ab/preguntas:0;
+  const ratioRP=preguntas?reflex/preguntas:(reflex?2:0);
+  const pctCx=reflex?100*rc/reflex:0;
+  // conversión a /10 según umbrales MITI (competencia 7, pericia 10)
+  const sAb = pctAb>=70?10 : pctAb>=50?7+3*(pctAb-50)/20 : 7*pctAb/50;
+  const sRP = ratioRP>=2?10 : ratioRP>=1?7+3*(ratioRP-1) : 7*ratioRP;
+  const sCx = pctCx>=50?10 : pctCx>=40?7+3*(pctCx-40)/10 : 7*pctCx/40;
+  const sInc= clamp(10-2.5*inc,0,10);
+  const nota=r1((sAb+sRP+sCx+sInc)/4);
+  return {ab,ce,rs,rc,af:n('afirmacion'),re:n('resumen'),inc,
+    pctAb:Math.round(pctAb),ratioRP:r1(ratioRP),pctCx:Math.round(pctCx),
+    sAb:r1(sAb),sRP:r1(sRP),sCx:r1(sCx),sInc:r1(sInc),nota};
+}
+
+/* ═══════════════════════════════ Agente 1 · generador del paciente ═══════════════════════════════ */
+const GEN_SYS=`Eres diseñador de pacientes virtuales para entrenar la ENTREVISTA MOTIVACIONAL (Miller y Rollnick) en universidades españolas de ciencias de la salud. Creas un paciente ambivalente y creíble respecto a una conducta de salud. Devuelves SOLO JSON válido:
+{
+ "nombre":"string","edad":number,"sexo":"H|M",
+ "conducta":"string (la conducta objetivo)",
+ "contexto":"string (2-3 frases: quién es, por qué está en consulta, cómo llega — se muestra al alumno)",
+ "etapa":"precontemplacion|contemplacion|preparacion",
+ "disposicion_inicial":number (precontemplación 15-30, contemplación 30-45, preparación 45-60),
+ "motivos_cambio":["3-4 motivos LATENTES para cambiar, con las palabras que usaría el paciente"],
+ "motivos_statu_quo":["3-4 motivos para no cambiar"],
+ "personalidad":"string (cómo habla, qué le irrita, qué le abre)",
+ "frases_resistencia":["2-3 frases típicas suyas de descargo/resistencia"],
+ "historia_oculta":"string (algo personal que solo comparte si se siente escuchado; conecta con su mayor motivo de cambio)"
+}
+El paciente NO es un caso extremo: es la persona normal que el alumno verá en consulta. Español coloquial de España.`;
+
+async function createCase(){
+  clearBanner();
+  const titu=$('#titu').value, conducta=$('#conducta').value.trim(), etapa=$('#etapa').value, extra=$('#extra').value.trim();
+  const prog=$('#createProg');prog.style.display='block';prog.textContent='Generando paciente ambivalente…';
+  $('#createBtn').disabled=true;
+  try{
+    const u=`Titulación del alumno: ${titu}. Conducta objetivo: ${conducta||'(elige tú una frecuente para esta titulación)'}. Etapa del cambio: ${etapa}. ${extra?'Indicaciones: '+extra:''}`;
+    const j=await openai([{role:'system',content:GEN_SYS},{role:'user',content:u}],{temp:0.9,max:1400});
+    C={id:'em_'+Date.now(),ts:Date.now(),titulacion:titu,modo:$('#modo').value,caso:j,chat:null,codigos:null,plan:'',eval:null};
+    startInterview();
+  }catch(e){banner(e.message);}
+  finally{prog.style.display='none';$('#createBtn').disabled=false;}
+}
+
+/* ═══════════════════════════════ Entrevista ═══════════════════════════════ */
+function startInterview(){
+  const c=C.caso;
+  $('#newPanel').classList.add('hidden');
+  $('#chatPanel').classList.remove('hidden');
+  $('#turnPill').style.display='inline-block';
+  $('#pName').textContent=c.nombre+' · '+c.edad+' a · '+c.conducta;
+  $('#perfil').innerHTML='<b>Contexto:</b> '+esc(c.contexto);
+  chat=[];codigos=[];turno=0;
+  regla=clamp(Number(c.disposicion_inicial)||35,0,100);
+  reglaSerie=[regla];
+  const entrenamiento=C.modo==='entrenamiento';
+  $('#reglaBox').style.display=entrenamiento?'block':'none';
+  $('#oarsBox').style.display=entrenamiento?'grid':'none';
+  renderRegla();renderOars();
+  $('#chat').innerHTML='';
+  sysMsg('El paciente entra en la consulta. Empieza tú: engancha antes de enfocar.');
+  renderTurn();
+}
+function renderTurn(){$('#turnPill').textContent='Turno '+turno;}
+function renderRegla(){
+  $('#reglaFill').style.width=regla+'%';
+  $('#reglaTxt').textContent=Math.round(regla)+'/100 · '+bandaRegla(regla);
+}
+function renderOars(){
+  const box=$('#oarsBox');const i=calculaIndices(codigos);
+  box.innerHTML=
+    '<div class="oc"><span class="on">'+i.ab+'/'+(i.ab+i.ce)+'</span><span class="ol">abiertas / preguntas</span></div>'+
+    '<div class="oc"><span class="on">'+(i.rs+i.rc)+'</span><span class="ol">reflexiones ('+i.rc+' complejas)</span></div>'+
+    '<div class="oc"><span class="on">'+i.af+'+'+i.re+'</span><span class="ol">afirmaciones + resúmenes</span></div>'+
+    '<div class="oc'+(i.inc?' bad':'')+'"><span class="on">'+i.inc+'</span><span class="ol">MI-inconsistentes</span></div>';
+}
+function sysMsg(t){
+  chat.push({who:'sys',t});
+  const m=el('div','msg sys');m.textContent=t;$('#chat').appendChild(m);$('#chat').scrollTop=1e6;
+}
+
+/* ═══ Agente 2 · clasificador OARS (router puro) ═══ */
+const CLASS_SYS=`Eres un codificador MITI experto. Recibes UNA intervención de un clínico en una entrevista motivacional (con el último turno del paciente como contexto). La codificas con esta taxonomía CERRADA (una intervención puede contener hasta 3 conductas, en orden de aparición):
+pregunta_abierta · pregunta_cerrada · reflexion_simple (repite/parafrasea) · reflexion_compleja (añade significado, emoción, doble cara, metáfora) · afirmacion (reconoce fortalezas/esfuerzos) · resumen (recoge varios elementos) · pedir_permiso · informar_con_permiso (da información DESPUÉS de pedir/obtener permiso) · consejo_no_pedido (dice qué debe hacer sin permiso) · confrontacion (discute, culpa, alecciona) · persuasion (argumenta a favor del cambio con lógica/miedo) · otro (saludos, gestión).
+NO evalúas calidad. Devuelves SOLO JSON: {"codigos":["..."]}`;
+
+/* ═══ Agente 3 · paciente ambivalente ═══ */
+const PAC_SYS=`Interpretas a un paciente ambivalente en una entrevista motivacional simulada (España, tono coloquial). Respondes en 1ª persona, 1-4 frases, coherente con tu personalidad y con tu NIVEL DE DISPOSICIÓN actual:
+- baja (<40): resistencia, descargo, frases de statu quo; si te confrontan, te cierras o discutes.
+- media (40-64): ambivalencia genuina — mezclas motivos para cambiar y para no cambiar.
+- alta (≥65): discurso de cambio (deseo, capacidad, razones, necesidad) y, si sigue subiendo, compromiso.
+Si el clínico refleja bien lo que sientes, te abres un poco más (puedes llegar a compartir tu historia oculta). Nunca haces de terapeuta ni analizas la técnica. Devuelves SOLO JSON: {"texto":"lo que dices"}.`;
+
+async function sendTurn(){
+  if(busy)return;
+  const t=$('#userIn').value.trim();if(!t)return;
+  busy=true;$('#sendBtn').disabled=true;
+  $('#userIn').value='';
+  turno++;renderTurn();
+  const c=C.caso;
+  const lastPa=[...chat].reverse().find(m=>m.who==='pa');
+  const msg={who:'al',t};chat.push(msg);drawMsg(msg);
+  try{
+    // 1) codificación (router puro)
+    const j1=await openai([{role:'system',content:CLASS_SYS},{role:'user',content:JSON.stringify({ultimo_turno_paciente:lastPa?lastPa.t:'(inicio)',intervencion_clinico:t})}],{temp:0.1,max:80});
+    const cods=(j1.codigos||[]).filter(k=>CODS[k]).slice(0,3);
+    msg.codigos=cods;codigos.push(...cods);
+    aplicaCodigos(cods);
+    reglaSerie.push(Math.round(regla));
+    if(C.modo==='entrenamiento'){drawCodigos(msg);renderRegla();renderOars();}
+    // 2) respuesta del paciente según disposición
+    const hist=chat.filter(m=>m.who!=='sys').slice(-8).map(m=>(m.who==='al'?'Clínico':'Paciente')+': '+m.t).join('\n');
+    const ctx=`PACIENTE: ${c.nombre}, ${c.edad} años. Conducta: ${c.conducta}. Personalidad: ${c.personalidad}. Motivos de cambio latentes: ${(c.motivos_cambio||[]).join(' | ')}. Motivos de statu quo: ${(c.motivos_statu_quo||[]).join(' | ')}. Frases de resistencia típicas: ${(c.frases_resistencia||[]).join(' | ')}. Historia oculta: ${c.historia_oculta}.\nDISPOSICIÓN ACTUAL: ${Math.round(regla)}/100 (${bandaRegla(regla)}).\nCONVERSACIÓN:\n${hist}\nResponde a la última intervención del clínico.`;
+    const j2=await openai([{role:'system',content:PAC_SYS},{role:'user',content:ctx}],{temp:0.85,max:280});
+    const pm={who:'pa',t:j2.texto||'…'};chat.push(pm);drawMsg(pm);
+  }catch(e){sysMsg('⚠️ '+e.message);}
+  finally{busy=false;$('#sendBtn').disabled=false;}
+}
+function drawMsg(m){
+  const d=el('div','msg '+m.who);
+  d.innerHTML='<div class="who">'+(m.who==='al'?'Tú':esc(C.caso.nombre))+'</div>'+esc(m.t);
+  d.dataset.ref=chat.indexOf(m);
+  $('#chat').appendChild(d);$('#chat').scrollTop=1e6;
+}
+function drawCodigos(m){
+  const nodes=$$('#chat .msg');const d=nodes[nodes.length-1];
+  if(!d||!m.codigos||!m.codigos.length)return;
+  m.codigos.forEach(c=>{const s=el('span','cod');s.textContent=CODS[c].lab;d.appendChild(s);});
+}
+$('#sendBtn').onclick=sendTurn;
+$('#userIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendTurn();}});
+
+$('#endBtn').onclick=()=>{
+  if(turno<3){alert('Una entrevista motivacional necesita al menos unos turnos. Sigue un poco más.');return;}
+  $('#chatPanel').classList.add('hidden');
+  $('#planPanel').classList.remove('hidden');
+};
+$('#backBtn').onclick=()=>{$('#planPanel').classList.add('hidden');$('#chatPanel').classList.remove('hidden');};
+
+/* ═══════════════════════════════ Agente 4 · evaluador del espíritu EM ═══════════════════════════════ */
+const EVAL_SYS=`Eres formador acreditado en entrevista motivacional (Miller y Rollnick) y evalúas la entrevista de un estudiante español de ciencias de la salud. Los índices de técnica (porcentaje de preguntas abiertas, ratio reflexiones/preguntas, % de reflexiones complejas, conductas MI-inconsistentes) YA están calculados de forma determinista: NO los recalcules ni los puntúes; puedes citarlos en el texto. Tú evalúas lo que los números no ven. Tono formativo. Devuelves SOLO JSON:
+{
+ "espiritu":{"puntos":number 0-10,"texto":"colaboración, aceptación, evocación y compasión: ¿trabajó CON el paciente o SOBRE él? ¿evocó los motivos del paciente o impuso los suyos? cita momentos concretos"},
+ "procesos":{"puntos":number 0-10,"texto":"¿siguió los procesos enganchar→enfocar→evocar→planificar? ¿enfocó demasiado pronto? ¿reconoció y aprovechó el discurso de cambio cuando apareció?"},
+ "cierre":{"puntos":number 0-10,"texto":"calidad del resumen final y del plan: ¿recoge la ambivalencia con las palabras del paciente? ¿el paso acordado es pequeño, concreto y elegido por el paciente? ¿coherente con su disposición final?"},
+ "resumen":"string (1-2 frases)",
+ "plan_mejora":"string (2-4 recomendaciones concretas, con ejemplos de frases alternativas a las que usó)"
+}`;
+
+async function runEval(){
+  const prog=$('#evalProg');prog.style.display='block';prog.textContent='Evaluando tu entrevista…';
+  $('#evalBtn').disabled=true;
+  indices=calculaIndices(codigos);
+  C.plan=$('#planTxt').value.trim();
+  C.chat=chat;C.codigos=codigos;C.reglaSerie=reglaSerie;C.indices=indices;
+  const c=C.caso;
+  const transcript=chat.filter(m=>m.who!=='sys').map(m=>(m.who==='al'?'Clínico':'Paciente')+': '+m.t).join('\n');
+  const ctx={
+    paciente:{conducta:c.conducta,etapa:c.etapa,motivos_cambio:c.motivos_cambio,historia_oculta:c.historia_oculta},
+    transcripcion:transcript,
+    indices_deterministas:indices,
+    disposicion:{inicial:reglaSerie[0],final:reglaSerie[reglaSerie.length-1]},
+    resumen_y_plan_del_alumno:C.plan
+  };
+  try{
+    const j=await openai([{role:'system',content:EVAL_SYS},{role:'user',content:JSON.stringify(ctx)}],{temp:0.3,max:1800});
+    const g=k=>clamp((j[k]&&j[k].puntos)||0,0,10);
+    // Nota global determinista en cliente: 40% índices + 25% espíritu + 20% procesos + 15% cierre
+    const nota_global=r1(clamp(0.4*indices.nota+0.25*g('espiritu')+0.2*g('procesos')+0.15*g('cierre'),0,10));
+    C.eval={...j,nota_global,nota_indices:indices.nota};
+    C.ts=Date.now();dbPut(C);renderList();
+    showReport(C.eval,false);
+  }catch(e){banner(e.message);}
+  finally{prog.style.display='none';$('#evalBtn').disabled=false;}
+}
+$('#evalBtn').onclick=runEval;
+
+function showReport(j,fromHistory){
+  ['newPanel','chatPanel','planPanel'].forEach(id=>$('#'+id).classList.add('hidden'));
+  $('#fbPanel').classList.remove('hidden');
+  $('#fbNota').textContent=j.nota_global;
+  $('#fbResumen').textContent=j.resumen||'';
+  const i=indices||{};
+  const box=$('#indBox');box.innerHTML='';
+  const mkI=(v,lab,score)=>{
+    const cls=score>=8.5?'ok':score>=6?'md':'bad';
+    const d=el('div','ib '+cls);d.innerHTML='<span class="iv">'+v+'</span>'+lab+'<br><span class="mono">'+score+'/10</span>';
+    box.appendChild(d);
+  };
+  mkI((i.pctAb!=null?i.pctAb:'—')+' %','preguntas abiertas (≥70 %)',i.sAb!=null?i.sAb:'—');
+  mkI(i.ratioRP!=null?i.ratioRP:'—','reflexiones / preguntas (≥2)',i.sRP!=null?i.sRP:'—');
+  mkI((i.pctCx!=null?i.pctCx:'—')+' %','reflexiones complejas (≥50 %)',i.sCx!=null?i.sCx:'—');
+  mkI(i.inc!=null?i.inc:'—','MI-inconsistentes (objetivo 0)',i.sInc!=null?i.sInc:'—');
+  drawChart();
+  const cards=$('#fbCards');cards.innerHTML='';
+  const mk=(dim,pts,txt)=>{const d=el('div','fb');d.innerHTML='<h4>'+esc(dim)+'<span class="pt">'+esc(pts)+'</span></h4>'+esc(txt);cards.appendChild(d);};
+  mk('Técnica OARS (determinista · 40 %)',(i.nota!=null?i.nota:j.nota_indices)+'/10',
+    'Conteo: '+ (i.ab!=null?(i.ab+' abiertas, '+i.ce+' cerradas, '+(i.rs+i.rc)+' reflexiones ('+i.rc+' complejas), '+i.af+' afirmaciones, '+i.re+' resúmenes, '+i.inc+' conductas inconsistentes.'):'recuperado del historial.'));
+  if(j.espiritu)mk('Espíritu EM (25 %)',j.espiritu.puntos+'/10',j.espiritu.texto);
+  if(j.procesos)mk('Procesos (20 %)',j.procesos.puntos+'/10',j.procesos.texto);
+  if(j.cierre)mk('Resumen y plan (15 %)',j.cierre.puntos+'/10',j.cierre.texto);
+  $('#fbPlan').innerHTML='<h4>Plan de mejora</h4>'+esc(j.plan_mejora||'');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function drawChart(){
+  const cv=$('#chart');if(!cv||!reglaSerie.length)return;
+  const data=reglaSerie.map((y,x)=>({x,y}));
+  const cfg={type:'line',
+    data:{datasets:[{data,borderColor:'#0F4C47',backgroundColor:'rgba(15,76,71,.08)',borderWidth:2,pointRadius:2,tension:.25,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      scales:{x:{type:'linear',title:{display:true,text:'turno'},ticks:{stepSize:1}},y:{min:0,max:100}},
+      plugins:{legend:{display:false}}}};
+  if(chart){chart.data=cfg.data;chart.options=cfg.options;chart.update('none');}
+  else chart=new Chart(cv.getContext('2d'),cfg);
+}
+
+/* ═══════════════════════════════ Export ═══════════════════════════════ */
+function informeLineas(){
+  const c=C.caso,j=C.eval,i=indices||{};const L=[];
+  L.push(['h1','EntrevistaMotivacional·AI — Informe']);
+  L.push(['p',c.nombre+', '+c.edad+' años · Conducta: '+c.conducta+' · Etapa: '+c.etapa+' · Titulación: '+C.titulacion+' · Modo: '+C.modo]);
+  L.push(['p','Nota global: '+j.nota_global+'/10 — '+(j.resumen||'')]);
+  L.push(['p','Disposición al cambio: '+reglaSerie[0]+' → '+reglaSerie[reglaSerie.length-1]+' /100']);
+  L.push(['h2','Índices de técnica (deterministas) — '+(i.nota!=null?i.nota:j.nota_indices)+'/10']);
+  if(i.pctAb!=null){
+    L.push(['p','% preguntas abiertas: '+i.pctAb+' % ('+i.sAb+'/10, pericia ≥70 %)']);
+    L.push(['p','Ratio reflexiones/preguntas: '+i.ratioRP+' ('+i.sRP+'/10, pericia ≥2)']);
+    L.push(['p','% reflexiones complejas: '+i.pctCx+' % ('+i.sCx+'/10, pericia ≥50 %)']);
+    L.push(['p','Conductas MI-inconsistentes: '+i.inc+' ('+i.sInc+'/10, objetivo 0)']);
+  }
+  [['espiritu','Espíritu EM'],['procesos','Procesos'],['cierre','Resumen y plan']].forEach(([k,lab])=>{
+    if(j[k]){L.push(['h2',lab+' — '+j[k].puntos+'/10']);L.push(['p',j[k].texto]);}
+  });
+  L.push(['h2','Plan de mejora']);L.push(['p',j.plan_mejora||'']);
+  L.push(['h2','Transcripción codificada']);
+  (C.chat||[]).filter(m=>m.who!=='sys').forEach(m=>{
+    L.push(['p',(m.who==='al'?'Clínico':'Paciente')+': '+m.t+(m.codigos&&m.codigos.length?'  ['+m.codigos.map(k=>CODS[k]?CODS[k].lab:k).join(', ')+']':'')]);
+  });
+  return L;
+}
+$('#dlWord').onclick=async()=>{
+  if(!C||!C.eval)return;
+  const {Document,Packer,Paragraph,HeadingLevel,TextRun}=docx;
+  const kids=informeLineas().map(([t,x])=>{
+    if(t==='h1')return new Paragraph({text:x,heading:HeadingLevel.TITLE});
+    if(t==='h2')return new Paragraph({text:x,heading:HeadingLevel.HEADING_1,spacing:{before:240}});
+    if(t==='h3')return new Paragraph({text:x,heading:HeadingLevel.HEADING_2,spacing:{before:160}});
+    return new Paragraph({children:[new TextRun({text:x,size:22})],spacing:{after:60}});
+  });
+  const doc=new Document({sections:[{children:kids}]});
+  const blob=await Packer.toBlob(doc);
+  dl(blob,'EntrevistaMotivacionalAI_'+(C.caso.nombre||'paciente').replace(/\s+/g,'_')+'.docx');
+};
+$('#dlPdf').onclick=()=>{
+  if(!C||!C.eval)return;
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({unit:'mm',format:'a4'});
+  const W=pdf.internal.pageSize.getWidth()-28;let y=18;
+  informeLineas().forEach(([t,x])=>{
+    const size=t==='h1'?16:t==='h2'?13:t==='h3'?11.5:10;
+    pdf.setFont('helvetica',t==='p'?'normal':'bold');pdf.setFontSize(size);
+    const lines=pdf.splitTextToSize(x,W);
+    lines.forEach(ln=>{if(y>282){pdf.addPage();y=18;}pdf.text(ln,14,y);y+=size*0.5;});
+    y+=t==='p'?1.5:3;
+  });
+  pdf.save('EntrevistaMotivacionalAI_informe.pdf');
+};
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+
+/* ═══════════════════════════════ Eventos UI ═══════════════════════════════ */
+$('#createBtn').onclick=createCase;
+$('#againBtn').onclick=()=>{location.reload();};
+
+</script>
+</body>
+</html>
